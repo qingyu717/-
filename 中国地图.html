@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>智慧生态安全检测 - 中国地图</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #f8faf9 0%, #e8f5e8 100%);
+            color: #1a2e1d;
+            min-height: 100vh;
+            display: flex;
+            align-items: stretch;
+            justify-content: center;
+        }
+
+        .page {
+            width: 100%;
+            max-width: 1200px;
+            margin: 16px;
+            padding: 16px 20px 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 18px;
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            border: 1px solid rgba(34, 197, 94, 0.2);
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid rgba(74, 222, 128, 0.4);
+        }
+
+        .title {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .title h1 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #065f46;
+        }
+
+        .title h1::before {
+            content: "";
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 999px;
+            background: #22c55e;
+            box-shadow: 0 0 16px rgba(34, 197, 94, 0.5);
+        }
+
+        .title span {
+            font-size: 0.8rem;
+            color: #047857;
+        }
+
+        .hint {
+            font-size: 0.78rem;
+            color: #047857;
+            text-align: right;
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin: 12px 0;
+        }
+
+        .control-btn {
+            padding: 8px 20px;
+            border: 1px solid rgba(34, 197, 94, 0.4);
+            background: rgba(34, 197, 94, 0.1);
+            color: #065f46;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            background: rgba(34, 197, 94, 0.2);
+            border-color: rgba(34, 197, 94, 0.6);
+            transform: translateY(-1px);
+        }
+
+        .control-btn.active {
+            background: rgba(34, 197, 94, 0.3);
+            border-color: #22c55e;
+            box-shadow: 0 0 12px rgba(34, 197, 94, 0.2);
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            margin-top: 6px;
+        }
+
+        .chart-wrapper {
+            flex: 1;
+            min-height: 600px;
+            height: 70vh;
+            border-radius: 16px;
+            overflow: hidden;
+            background: radial-gradient(circle at top left, #f0fdf4, #e8f5e8);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            position: relative;
+        }
+
+        #chart {
+            width: 100%;
+            height: 100%;
+        }
+
+        .chart-overlay {
+            position: absolute;
+            right: 14px;
+            top: 12px;
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: #065f46;
+            backdrop-filter: blur(8px);
+        }
+
+        @media (max-width: 768px) {
+            .page {
+                margin: 8px;
+                padding: 12px;
+            }
+
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 6px;
+            }
+
+            .hint {
+                text-align: left;
+            }
+
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .control-btn {
+                width: 100%;
+                max-width: 200px;
+            }
+
+            .chart-wrapper {
+                height: 60vh;
+                min-height: 320px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page">
+        <header>
+            <div class="title">
+                <h1>智慧生态安全检测 - 中国地图</h1>
+                <span>使用 ECharts 实现生态安全数据可视化</span>
+            </div>
+            <div class="hint">
+                • 点击按钮切换「地图」和「柱状图」显示<br />
+                • 绿色深浅表示生态安全指数
+            </div>
+        </header>
+
+        <div class="controls">
+            <button class="control-btn active" id="mapBtn">全国地图</button>
+            <button class="control-btn" id="barBtn">柱状图视图</button>
+            <button class="control-btn back-btn" id="backBtn" style="display: none;">返回全国</button>
+        </div>
+
+        <main>
+            <div class="chart-wrapper">
+                <div id="chart"></div>
+                <div class="chart-overlay" id="chartOverlay">地图视图</div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ECharts 主库 -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+    <!-- 中国地图数据（直接通过这个脚本注册好 'china' 地图，无需自己加载 JSON） -->
+    <script src="https://fastly.jsdelivr.net/npm/echarts/map/js/china.js"></script>
+
+    <script>
+        const chartDom = document.getElementById('chart');
+        const myChart = echarts.init(chartDom);
+        const mapBtn = document.getElementById('mapBtn');
+        const barBtn = document.getElementById('barBtn');
+        const backBtn = document.getElementById('backBtn');
+        const chartOverlay = document.getElementById('chartOverlay');
+
+        // 生态安全检测数据 - 使用绿色深浅表示安全指数
+        var data = [
+            { name: '北京', value: 85 },
+            { name: '天津', value: 78 },
+            { name: '上海', value: 88 },
+            { name: '重庆', value: 75 },
+            { name: '广东', value: 82 },
+            { name: '福建', value: 80 },
+            { name: '浙江', value: 86 },
+            { name: '江苏', value: 84 },
+            { name: '山东', value: 79 },
+            { name: '河南', value: 76 },
+            { name: '湖北', value: 77 },
+            { name: '湖南', value: 78 },
+            { name: '四川', value: 81 },
+            { name: '陕西', value: 74 },
+            { name: '辽宁', value: 73 },
+            { name: '吉林', value: 72 },
+            { name: '黑龙江', value: 70 },
+            { name: '云南', value: 83 },
+            { name: '贵州', value: 79 },
+            { name: '广西', value: 80 },
+            { name: '安徽', value: 78 },
+            { name: '江西', value: 77 },
+            { name: '河北', value: 75 },
+            { name: '山西', value: 72 },
+            { name: '内蒙古', value: 68 },
+            { name: '甘肃', value: 65 },
+            { name: '青海', value: 62 },
+            { name: '宁夏', value: 60 },
+            { name: '新疆', value: 58 },
+            { name: '西藏', value: 55 },
+            { name: '海南', value: 82 }
+        ];
+
+        // 按 value 排序，方便柱状图从小到大展示
+        data.sort(function (a, b) {
+            return a.value - b.value;
+        });
+
+        // 省份详细数据（模拟数据）
+        const provinceData = {
+            '北京': {
+                name: '北京',
+                data: [
+                    { name: '东城区', value: 86 }, { name: '西城区', value: 88 }, { name: '朝阳区', value: 85 },
+                    { name: '丰台区', value: 82 }, { name: '石景山区', value: 84 }, { name: '海淀区', value: 89 },
+                    { name: '门头沟区', value: 78 }, { name: '房山区', value: 80 }, { name: '通州区', value: 83 },
+                    { name: '顺义区', value: 81 }, { name: '昌平区', value: 79 }, { name: '大兴区', value: 84 },
+                    { name: '怀柔区', value: 77 }, { name: '平谷区', value: 76 }, { name: '密云区', value: 75 },
+                    { name: '延庆区', value: 74 }
+                ]
+            },
+            '天津': {
+                name: '天津',
+                data: [
+                    { name: '和平区', value: 85 }, { name: '河东区', value: 83 }, { name: '河西区', value: 84 },
+                    { name: '南开区', value: 86 }, { name: '河北区', value: 82 }, { name: '红桥区', value: 81 },
+                    { name: '东丽区', value: 80 }, { name: '西青区', value: 79 }, { name: '津南区', value: 78 },
+                    { name: '北辰区', value: 77 }, { name: '武清区', value: 76 }, { name: '宝坻区', value: 75 },
+                    { name: '滨海新区', value: 87 }, { name: '宁河区', value: 74 }, { name: '静海区', value: 73 },
+                    { name: '蓟州区', value: 72 }
+                ]
+            },
+            '上海': {
+                name: '上海',
+                data: [
+                    { name: '黄浦区', value: 88 }, { name: '徐汇区', value: 87 }, { name: '长宁区', value: 86 },
+                    { name: '静安区', value: 89 }, { name: '普陀区', value: 85 }, { name: '虹口区', value: 84 },
+                    { name: '杨浦区', value: 83 }, { name: '闵行区', value: 82 }, { name: '宝山区', value: 81 },
+                    { name: '嘉定区', value: 80 }, { name: '浦东新区', value: 90 }, { name: '金山区', value: 79 },
+                    { name: '松江区', value: 78 }, { name: '青浦区', value: 77 }, { name: '奉贤区', value: 76 },
+                    { name: '崇明区', value: 75 }
+                ]
+            },
+            '重庆': {
+                name: '重庆',
+                data: [
+                    { name: '万州区', value: 75 }, { name: '涪陵区', value: 76 }, { name: '渝中区', value: 85 },
+                    { name: '大渡口区', value: 80 }, { name: '江北区', value: 82 }, { name: '沙坪坝区', value: 81 },
+                    { name: '九龙坡区', value: 83 }, { name: '南岸区', value: 82 }, { name: '北碚区', value: 79 },
+                    { name: '綦江区', value: 77 }, { name: '大足区', value: 76 }, { name: '渝北区', value: 84 },
+                    { name: '巴南区', value: 78 }, { name: '黔江区', value: 74 }, { name: '长寿区', value: 75 },
+                    { name: '江津区', value: 76 }, { name: '合川区', value: 75 }, { name: '永川区', value: 77 },
+                    { name: '南川区', value: 74 }, { name: '璧山区', value: 78 }, { name: '铜梁区', value: 76 },
+                    { name: '潼南区', value: 75 }, { name: '荣昌区', value: 77 }, { name: '开州区', value: 74 },
+                    { name: '梁平区', value: 73 }, { name: '武隆区', value: 72 }
+                ]
+            },
+            '河北': {
+                name: '河北',
+                data: [
+                    { name: '石家庄市', value: 75 }, { name: '唐山市', value: 76 }, { name: '秦皇岛市', value: 77 },
+                    { name: '邯郸市', value: 74 }, { name: '邢台市', value: 73 }, { name: '保定市', value: 75 },
+                    { name: '张家口市', value: 72 }, { name: '承德市', value: 71 }, { name: '沧州市', value: 74 },
+                    { name: '廊坊市', value: 76 }, { name: '衡水市', value: 73 }
+                ]
+            },
+            '山西': {
+                name: '山西',
+                data: [
+                    { name: '太原市', value: 72 }, { name: '大同市', value: 70 }, { name: '阳泉市', value: 69 },
+                    { name: '长治市', value: 71 }, { name: '晋城市', value: 70 }, { name: '朔州市', value: 68 },
+                    { name: '晋中市', value: 71 }, { name: '运城市', value: 70 }, { name: '忻州市', value: 67 },
+                    { name: '临汾市', value: 69 }, { name: '吕梁市', value: 68 }
+                ]
+            },
+            '内蒙古': {
+                name: '内蒙古',
+                data: [
+                    { name: '呼和浩特市', value: 68 }, { name: '包头市', value: 67 }, { name: '乌海市', value: 66 },
+                    { name: '赤峰市', value: 65 }, { name: '通辽市', value: 64 }, { name: '鄂尔多斯市', value: 69 },
+                    { name: '呼伦贝尔市', value: 63 }, { name: '巴彦淖尔市', value: 62 }, { name: '乌兰察布市', value: 61 },
+                    { name: '兴安盟', value: 60 }, { name: '锡林郭勒盟', value: 59 }, { name: '阿拉善盟', value: 58 }
+                ]
+            },
+            '辽宁': {
+                name: '辽宁',
+                data: [
+                    { name: '沈阳市', value: 73 }, { name: '大连市', value: 75 }, { name: '鞍山市', value: 72 },
+                    { name: '抚顺市', value: 71 }, { name: '本溪市', value: 70 }, { name: '丹东市', value: 72 },
+                    { name: '锦州市', value: 71 }, { name: '营口市', value: 73 }, { name: '阜新市', value: 69 },
+                    { name: '辽阳市', value: 70 }, { name: '盘锦市', value: 74 }, { name: '铁岭市', value: 68 },
+                    { name: '朝阳市', value: 67 }, { name: '葫芦岛市', value: 69 }
+                ]
+            },
+            '吉林': {
+                name: '吉林',
+                data: [
+                    { name: '长春市', value: 72 }, { name: '吉林市', value: 71 }, { name: '四平市', value: 70 },
+                    { name: '辽源市', value: 69 }, { name: '通化市', value: 70 }, { name: '白山市', value: 68 },
+                    { name: '松原市', value: 69 }, { name: '白城市', value: 67 }, { name: '延边朝鲜族自治州', value: 66 }
+                ]
+            },
+            '黑龙江': {
+                name: '黑龙江',
+                data: [
+                    { name: '哈尔滨市', value: 70 }, { name: '齐齐哈尔市', value: 68 }, { name: '鸡西市', value: 67 },
+                    { name: '鹤岗市', value: 66 }, { name: '双鸭山市', value: 65 }, { name: '大庆市', value: 69 },
+                    { name: '伊春市', value: 64 }, { name: '佳木斯市', value: 66 }, { name: '七台河市', value: 65 },
+                    { name: '牡丹江市', value: 67 }, { name: '黑河市', value: 63 }, { name: '绥化市', value: 64 },
+                    { name: '大兴安岭地区', value: 62 }
+                ]
+            },
+            '江苏': {
+                name: '江苏',
+                data: [
+                    { name: '南京市', value: 86 }, { name: '无锡市', value: 85 }, { name: '徐州市', value: 80 },
+                    { name: '常州市', value: 83 }, { name: '苏州市', value: 87 }, { name: '南通市', value: 82 },
+                    { name: '连云港市', value: 78 }, { name: '淮安市', value: 79 }, { name: '盐城市', value: 80 },
+                    { name: '扬州市', value: 81 }, { name: '镇江市', value: 82 }, { name: '泰州市', value: 80 },
+                    { name: '宿迁市', value: 78 }
+                ]
+            },
+            '浙江': {
+                name: '浙江',
+                data: [
+                    { name: '杭州市', value: 87 }, { name: '宁波市', value: 85 }, { name: '温州市', value: 82 },
+                    { name: '嘉兴市', value: 84 }, { name: '湖州市', value: 83 }, { name: '绍兴市', value: 81 },
+                    { name: '金华市', value: 79 }, { name: '衢州市', value: 78 }, { name: '舟山市', value: 80 },
+                    { name: '台州市', value: 79 }, { name: '丽水市', value: 77 }
+                ]
+            },
+            '安徽': {
+                name: '安徽',
+                data: [
+                    { name: '合肥市', value: 78 }, { name: '芜湖市', value: 77 }, { name: '蚌埠市', value: 76 },
+                    { name: '淮南市', value: 75 }, { name: '马鞍山市', value: 77 }, { name: '淮北市', value: 74 },
+                    { name: '铜陵市', value: 75 }, { name: '安庆市', value: 76 }, { name: '黄山市', value: 75 },
+                    { name: '滁州市', value: 76 }, { name: '阜阳市', value: 74 }, { name: '宿州市', value: 73 },
+                    { name: '六安市', value: 74 }, { name: '亳州市', value: 73 }, { name: '池州市', value: 75 },
+                    { name: '宣城市', value: 76 }
+                ]
+            },
+            '福建': {
+                name: '福建',
+                data: [
+                    { name: '福州市', value: 80 }, { name: '厦门市', value: 82 }, { name: '莆田市', value: 79 },
+                    { name: '三明市', value: 78 }, { name: '泉州市', value: 81 }, { name: '漳州市', value: 79 },
+                    { name: '南平市', value: 77 }, { name: '龙岩市', value: 78 }, { name: '宁德市', value: 77 }
+                ]
+            },
+            '福州市': {
+                name: '福州市',
+                data: [
+                    { name: '鼓楼区', value: 85 }, { name: '台江区', value: 83 }, { name: '仓山区', value: 82 },
+                    { name: '马尾区', value: 81 }, { name: '晋安区', value: 84 }, { name: '长乐区', value: 80 },
+                    { name: '闽侯县', value: 78 }, { name: '连江县', value: 77 }, { name: '罗源县', value: 76 },
+                    { name: '闽清县', value: 75 }, { name: '永泰县', value: 74 }, { name: '平潭县', value: 79 }
+                ]
+            },
+            '江西': {
+                name: '江西',
+                data: [
+                    { name: '南昌市', value: 77 }, { name: '景德镇市', value: 76 }, { name: '萍乡市', value: 75 },
+                    { name: '九江市', value: 76 }, { name: '新余市', value: 77 }, { name: '鹰潭市', value: 75 },
+                    { name: '赣州市', value: 74 }, { name: '吉安市', value: 73 }, { name: '宜春市', value: 74 },
+                    { name: '抚州市', value: 73 }, { name: '上饶市', value: 75 }
+                ]
+            },
+            '山东': {
+                name: '山东',
+                data: [
+                    { name: '济南市', value: 79 }, { name: '青岛市', value: 81 }, { name: '淄博市', value: 78 },
+                    { name: '枣庄市', value: 77 }, { name: '东营市', value: 79 }, { name: '烟台市', value: 80 },
+                    { name: '潍坊市', value: 78 }, { name: '济宁市', value: 77 }, { name: '泰安市', value: 76 },
+                    { name: '威海市', value: 80 }, { name: '日照市', value: 77 }, { name: '临沂市', value: 76 },
+                    { name: '德州市', value: 75 }, { name: '聊城市', value: 74 }, { name: '滨州市', value: 75 },
+                    { name: '菏泽市', value: 73 }
+                ]
+            },
+            '河南': {
+                name: '河南',
+                data: [
+                    { name: '郑州市', value: 76 }, { name: '开封市', value: 75 }, { name: '洛阳市', value: 74 },
+                    { name: '平顶山市', value: 73 }, { name: '安阳市', value: 72 }, { name: '鹤壁市', value: 73 },
+                    { name: '新乡市', value: 74 }, { name: '焦作市', value: 73 }, { name: '濮阳市', value: 72 },
+                    { name: '许昌市', value: 74 }, { name: '漯河市', value: 73 }, { name: '三门峡市', value: 72 },
+                    { name: '南阳市', value: 73 }, { name: '商丘市', value: 72 }, { name: '信阳市', value: 73 },
+                    { name: '周口市', value: 71 }, { name: '驻马店市', value: 72 }
+                ]
+            },
+            '湖北': {
+                name: '湖北',
+                data: [
+                    { name: '武汉市', value: 77 }, { name: '黄石市', value: 76 }, { name: '十堰市', value: 75 },
+                    { name: '宜昌市', value: 76 }, { name: '襄阳市', value: 75 }, { name: '鄂州市', value: 76 },
+                    { name: '荆门市', value: 74 }, { name: '孝感市', value: 75 }, { name: '荆州市', value: 74 },
+                    { name: '黄冈市', value: 73 }, { name: '咸宁市', value: 74 }, { name: '随州市', value: 73 },
+                    { name: '恩施土家族苗族自治州', value: 72 }, { name: '仙桃市', value: 74 }, { name: '潜江市', value: 73 },
+                    { name: '天门市', value: 72 }, { name: '神农架林区', value: 71 }
+                ]
+            },
+            '湖南': {
+                name: '湖南',
+                data: [
+                    { name: '长沙市', value: 78 }, { name: '株洲市', value: 77 }, { name: '湘潭市', value: 76 },
+                    { name: '衡阳市', value: 75 }, { name: '邵阳市', value: 74 }, { name: '岳阳市', value: 76 },
+                    { name: '常德市', value: 75 }, { name: '张家界市', value: 73 }, { name: '益阳市', value: 74 },
+                    { name: '郴州市', value: 73 }, { name: '永州市', value: 72 }, { name: '怀化市', value: 71 },
+                    { name: '娄底市', value: 72 }, { name: '湘西土家族苗族自治州', value: 70 }
+                ]
+            },
+            '张家界市': {
+                name: '张家界市',
+                data: [
+                    { name: '永定区', value: 75 }, { name: '武陵源区', value: 76 }, { name: '慈利县', value: 72 },
+                    { name: '桑植县', value: 71 }
+                ]
+            },
+            '广东': {
+                name: '广东',
+                data: [
+                    { name: '广州市', value: 85 }, { name: '韶关市', value: 76 }, { name: '深圳市', value: 88 },
+                    { name: '珠海市', value: 82 }, { name: '汕头市', value: 79 }, { name: '佛山市', value: 83 },
+                    { name: '江门市', value: 80 }, { name: '湛江市', value: 80 }, { name: '茂名市', value: 78 },
+                    { name: '肇庆市', value: 77 }, { name: '惠州市', value: 81 }, { name: '梅州市', value: 76 },
+                    { name: '汕尾市', value: 75 }, { name: '河源市', value: 74 }, { name: '阳江市', value: 77 },
+                    { name: '清远市', value: 75 }, { name: '东莞市', value: 84 }, { name: '中山市', value: 82 },
+                    { name: '潮州市', value: 76 }, { name: '揭阳市', value: 75 }, { name: '云浮市', value: 74 }
+                ]
+            },
+            '广西': {
+                name: '广西',
+                data: [
+                    { name: '南宁市', value: 80 }, { name: '柳州市', value: 79 }, { name: '桂林市', value: 78 },
+                    { name: '梧州市', value: 77 }, { name: '北海市', value: 78 }, { name: '防城港市', value: 77 },
+                    { name: '钦州市', value: 76 }, { name: '贵港市', value: 75 }, { name: '玉林市', value: 76 },
+                    { name: '百色市', value: 74 }, { name: '贺州市', value: 75 }, { name: '河池市', value: 73 },
+                    { name: '来宾市', value: 74 }, { name: '崇左市', value: 73 }
+                ]
+            },
+            '海南': {
+                name: '海南',
+                data: [
+                    { name: '海口市', value: 82 }, { name: '三亚市', value: 81 }, { name: '三沙市', value: 80 },
+                    { name: '儋州市', value: 79 }, { name: '五指山市', value: 78 }, { name: '琼海市', value: 79 },
+                    { name: '文昌市', value: 78 }, { name: '万宁市', value: 77 }, { name: '东方市', value: 76 },
+                    { name: '定安县', value: 75 }, { name: '屯昌县', value: 74 }, { name: '澄迈县', value: 75 },
+                    { name: '临高县', value: 74 }, { name: '白沙黎族自治县', value: 73 }, { name: '昌江黎族自治县', value: 72 },
+                    { name: '乐东黎族自治县', value: 73 }, { name: '陵水黎族自治县', value: 74 }, { name: '保亭黎族苗族自治县', value: 73 },
+                    { name: '琼中黎族苗族自治县', value: 72 }
+                ]
+            },
+            '四川': {
+                name: '四川',
+                data: [
+                    { name: '成都市', value: 81 }, { name: '自贡市', value: 78 }, { name: '攀枝花市', value: 77 },
+                    { name: '泸州市', value: 76 }, { name: '德阳市', value: 77 }, { name: '绵阳市', value: 78 },
+                    { name: '广元市', value: 75 }, { name: '遂宁市', value: 76 }, { name: '内江市', value: 75 },
+                    { name: '乐山市', value: 76 }, { name: '南充市', value: 75 }, { name: '眉山市', value: 76 },
+                    { name: '宜宾市', value: 75 }, { name: '广安市', value: 74 }, { name: '达州市', value: 73 },
+                    { name: '雅安市', value: 74 }, { name: '巴中市', value: 72 }, { name: '资阳市', value: 73 },
+                    { name: '阿坝藏族羌族自治州', value: 70 }, { name: '甘孜藏族自治州', value: 69 }, { name: '凉山彝族自治州', value: 71 }
+                ]
+            },
+            '贵州': {
+                name: '贵州',
+                data: [
+                    { name: '贵阳市', value: 79 }, { name: '六盘水市', value: 77 }, { name: '遵义市', value: 78 },
+                    { name: '安顺市', value: 76 }, { name: '毕节市', value: 75 }, { name: '铜仁市', value: 74 },
+                    { name: '黔西南布依族苗族自治州', value: 73 }, { name: '黔东南苗族侗族自治州', value: 72 },
+                    { name: '黔南布依族苗族自治州', value: 73 }
+                ]
+            },
+            '云南': {
+                name: '云南',
+                data: [
+                    { name: '昆明市', value: 83 }, { name: '曲靖市', value: 80 }, { name: '玉溪市', value: 79 },
+                    { name: '保山市', value: 78 }, { name: '昭通市', value: 77 }, { name: '丽江市', value: 78 },
+                    { name: '普洱市', value: 76 }, { name: '临沧市', value: 75 }, { name: '楚雄彝族自治州', value: 74 },
+                    { name: '红河哈尼族彝族自治州', value: 73 }, { name: '文山壮族苗族自治州', value: 72 },
+                    { name: '西双版纳傣族自治州', value: 75 }, { name: '大理白族自治州', value: 76 },
+                    { name: '德宏傣族景颇族自治州', value: 74 }, { name: '怒江傈僳族自治州', value: 71 },
+                    { name: '迪庆藏族自治州', value: 70 }
+                ]
+            },
+            '西藏': {
+                name: '西藏',
+                data: [
+                    { name: '拉萨市', value: 55 }, { name: '日喀则市', value: 54 }, { name: '昌都市', value: 53 },
+                    { name: '林芝市', value: 56 }, { name: '山南市', value: 54 }, { name: '那曲市', value: 52 },
+                    { name: '阿里地区', value: 51 }
+                ]
+            },
+            '陕西': {
+                name: '陕西',
+                data: [
+                    { name: '西安市', value: 74 }, { name: '铜川市', value: 72 }, { name: '宝鸡市', value: 73 },
+                    { name: '咸阳市', value: 72 }, { name: '渭南市', value: 71 }, { name: '延安市', value: 70 },
+                    { name: '汉中市', value: 71 }, { name: '榆林市', value: 69 }, { name: '安康市', value: 70 },
+                    { name: '商洛市', value: 69 }
+                ]
+            },
+            '甘肃': {
+                name: '甘肃',
+                data: [
+                    { name: '兰州市', value: 65 }, { name: '嘉峪关市', value: 64 }, { name: '金昌市', value: 63 },
+                    { name: '白银市', value: 62 }, { name: '天水市', value: 61 }, { name: '武威市', value: 60 },
+                    { name: '张掖市', value: 61 }, { name: '平凉市', value: 59 }, { name: '酒泉市', value: 58 },
+                    { name: '庆阳市', value: 59 }, { name: '定西市', value: 58 }, { name: '陇南市', value: 57 },
+                    { name: '临夏回族自治州', value: 56 }, { name: '甘南藏族自治州', value: 55 }
+                ]
+            },
+            '青海': {
+                name: '青海',
+                data: [
+                    { name: '西宁市', value: 62 }, { name: '海东市', value: 60 }, { name: '海北藏族自治州', value: 58 },
+                    { name: '黄南藏族自治州', value: 57 }, { name: '海南藏族自治州', value: 56 }, { name: '果洛藏族自治州', value: 55 },
+                    { name: '玉树藏族自治州', value: 54 }, { name: '海西蒙古族藏族自治州', value: 53 }
+                ]
+            },
+            '宁夏': {
+                name: '宁夏',
+                data: [
+                    { name: '银川市', value: 60 }, { name: '石嘴山市', value: 59 }, { name: '吴忠市', value: 58 },
+                    { name: '固原市', value: 57 }, { name: '中卫市', value: 56 }
+                ]
+            },
+            '新疆': {
+                name: '新疆',
+                data: [
+                    { name: '乌鲁木齐市', value: 58 }, { name: '克拉玛依市', value: 57 }, { name: '吐鲁番市', value: 56 },
+                    { name: '哈密市', value: 55 }, { name: '昌吉回族自治州', value: 54 }, { name: '博尔塔拉蒙古自治州', value: 53 },
+                    { name: '巴音郭楞蒙古自治州', value: 52 }, { name: '阿克苏地区', value: 51 }, { name: '克孜勒苏柯尔克孜自治州', value: 50 },
+                    { name: '喀什地区', value: 49 }, { name: '和田地区', value: 48 }, { name: '伊犁哈萨克自治州', value: 54 },
+                    { name: '塔城地区', value: 52 }, { name: '阿勒泰地区', value: 51 }
+                ]
+            }
+        };
+
+        const mapOption = {
+            tooltip: {
+                trigger: 'item',
+                formatter: '{b}<br/>生态安全指数：{c}<br/><span style="color:#86efac">点击查看详情</span>'
+            },
+            visualMap: {
+                left: 'left',
+                bottom: '5%',
+                min: 55,
+                max: 88,
+                text: ['高', '低'],
+                calculable: true,
+                inRange: {
+                    color: [
+                        '#d1fae5',  // 最浅绿 - 安全指数低
+                        '#a7f3d0',
+                        '#6ee7b7',
+                        '#34d399',
+                        '#10b981',
+                        '#059669',
+                        '#047857',
+                        '#065f46',
+                        '#064e3b',
+                        '#022c22'   // 最深绿 - 安全指数高
+                    ]
+                }
+            },
+            series: [
+                {
+                    id: 'demo',
+                    name: '生态安全指数',
+                    type: 'map',
+                    map: 'china',     // 这个名字由 china.js 注册好
+                    roam: false,      // 禁止拖拽缩放，防止地图飘走
+                    label: {
+                        show: false
+                    },
+                    emphasis: {
+                        label: {
+                            show: true
+                        }
+                    },
+                    itemStyle: {
+                        borderColor: '#60a5fa'
+                    },
+                    animationDurationUpdate: 1000,
+                    universalTransition: true,
+                    data: data,
+                    selectedMode: 'single'
+                }
+            ]
+        };
+
+        const barOption = {
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'shadow'
+                },
+                formatter: function (params) {
+                    const p = params[0];
+                    return p.name + '<br/>生态安全指数：' + p.value;
+                }
+            },
+            grid: {
+                left: 100,
+                right: 40,
+                top: 40,
+                bottom: 40
+            },
+            xAxis: {
+                type: 'value',
+                axisLine: {
+                    lineStyle: {
+                        color: '#86efac'
+                    }
+                },
+                axisLabel: {
+                    color: '#bbf7d0'
+                }
+            },
+            yAxis: {
+                type: 'category',
+                axisLabel: {
+                    rotate: 30,
+                    color: '#bbf7d0'
+                },
+                axisLine: {
+                    lineStyle: {
+                        color: '#86efac'
+                    }
+                },
+                data: data.map(function (item) {
+                    return item.name;
+                })
+            },
+            animationDurationUpdate: 1000,
+            series: {
+                type: 'bar',
+                id: 'demo',   // 和 mapOption 里的 series.id 一致，才能做 universalTransition
+                itemStyle: {
+                    color: function (params) {
+                        // 根据数值返回不同的绿色
+                        const value = params.value;
+                        const colors = [
+                            '#d1fae5', '#a7f3d0', '#6ee7b7', '#34d399',
+                            '#10b981', '#059669', '#047857', '#065f46',
+                            '#064e3b', '#022c22'
+                        ];
+                        const index = Math.min(Math.floor((value - 55) / 3.3), 9);
+                        return colors[index];
+                    }
+                },
+                data: data.map(function (item) {
+                    return item.value;
+                }),
+                universalTransition: true
+            }
+        };
+
+        let currentOption = mapOption;
+        let currentProvince = null;
+        myChart.setOption(mapOption);
+
+        // 地图点击事件
+        myChart.on('click', function (params) {
+            if (params.componentType === 'series' && params.seriesType === 'map') {
+                const areaName = params.name;
+
+                // 检查是否是福州市（特殊处理县级地图）
+                if (areaName === '福州市' && provinceData[areaName]) {
+                    showCountyMap(areaName);
+                }
+                // 检查是否是张家界市（特殊处理县级地图）
+                else if (areaName === '张家界市' && provinceData[areaName]) {
+                    showCountyMap(areaName);
+                }
+                // 检查是否是省份（有市级数据）
+                else if (provinceData[areaName] && areaName !== '福州市' && areaName !== '张家界市') {
+                    showProvinceMap(areaName);
+                } else {
+                    // 显示该省份的详细信息
+                    myChart.showLoading({
+                        text: '正在获取 ' + areaName + ' 的数据...',
+                        color: '#22c55e',
+                        textColor: '#bbf7d0',
+                        maskColor: 'rgba(10, 46, 29, 0.8)'
+                    });
+
+                    setTimeout(() => {
+                        myChart.hideLoading();
+                        alert('抱歉，' + areaName + ' 的市级数据暂未配置，请稍后重试。');
+                    }, 500);
+                }
+            }
+        });
+
+        // 显示省份地图
+        function showProvinceMap(provinceName) {
+            const provinceInfo = provinceData[provinceName];
+            const provinceDataList = provinceInfo.data;
+
+            // 添加过渡动画效果
+            myChart.dispatchAction({
+                type: 'hideTip'
+            });
+
+            // 先显示加载动画
+            myChart.showLoading({
+                text: '正在加载 ' + provinceName + ' 地图...',
+                color: '#22c55e',
+                textColor: '#bbf7d0',
+                maskColor: 'rgba(10, 46, 29, 0.8)'
+            });
+
+            const provinceOption = {
+                tooltip: {
+                    trigger: 'item',
+                    formatter: '{b}<br/>生态安全指数：{c}'
+                },
+                visualMap: {
+                    left: 'left',
+                    bottom: '5%',
+                    min: Math.min(...provinceDataList.map(d => d.value)),
+                    max: Math.max(...provinceDataList.map(d => d.value)),
+                    text: ['高', '低'],
+                    calculable: true,
+                    inRange: {
+                        color: [
+                            '#d1fae5', '#a7f3d0', '#6ee7b7', '#34d399',
+                            '#10b981', '#059669', '#047857', '#065f46',
+                            '#064e3b', '#022c22'
+                        ]
+                    }
+                },
+                series: [
+                    {
+                        id: 'demo',  // 保持相同的id以实现平滑过渡
+                        name: provinceName + '生态安全指数',
+                        type: 'map',
+                        map: provinceName,
+                        roam: false,
+                        label: {
+                            show: true,
+                            color: '#022c22',
+                            fontSize: 10
+                        },
+                        emphasis: {
+                            label: {
+                                show: true,
+                                color: '#022c22'
+                            }
+                        },
+                        itemStyle: {
+                            areaColor: '#d1fae5',
+                            borderColor: '#60a5fa'
+                        },
+                        data: provinceDataList,
+                        animationDurationUpdate: 1000,
+                        universalTransition: true
+                    }
+                ]
+            };
+
+            // 动态加载省份地图数据
+            const script = document.createElement('script');
+            script.src = `https://fastly.jsdelivr.net/npm/echarts/map/js/province/${getProvincePinyin(provinceName)}.js`;
+            script.onload = function () {
+                // 隐藏加载动画
+                setTimeout(() => {
+                    myChart.hideLoading();
+
+                    // 使用平滑过渡效果
+                    myChart.setOption(provinceOption, {
+                        notMerge: false,
+                        lazyUpdate: false,
+                        silent: false
+                    });
+
+                    currentProvince = provinceName;
+                    updateButtonState('province');
+                    chartOverlay.textContent = provinceName + '地图';
+                    backBtn.style.display = 'block';
+                }, 500);
+            };
+            script.onerror = function () {
+                myChart.hideLoading();
+                console.error('地图数据加载失败:', provinceName, 'URL:', script.src);
+                alert('抱歉，' + provinceName + '的地图数据暂时无法加载\n\n可能的原因：\n1. 网络连接问题\n2. 该省份地图数据不存在\n3. 拼音映射不正确\n\n请检查控制台查看详细错误信息。');
+
+                // 自动返回全国地图
+                setTimeout(() => {
+                    backToChinaMap();
+                }, 1000);
+            };
+            document.head.appendChild(script);
+        }
+
+        // 显示县级地图（支持多个城市）
+        function showCountyMap(cityName) {
+            const cityInfo = provinceData[cityName];
+            const countyDataList = cityInfo.data;
+
+            // 城市到地图名称和数据源的映射
+            const cityMapConfig = {
+                '福州市': {
+                    mapName: '福州',
+                    dataUrl: 'https://geo.datav.aliyun.com/areas_v3/bound/350100_full.json'
+                },
+                '张家界市': {
+                    mapName: '张家界',
+                    dataUrl: 'https://geo.datav.aliyun.com/areas_v3/bound/430800_full.json'
+                }
+            };
+
+            const config = cityMapConfig[cityName];
+            if (!config) {
+                alert('抱歉，' + cityName + '的县级地图功能暂未配置');
+                return;
+            }
+
+            // 添加过渡动画效果
+            myChart.dispatchAction({
+                type: 'hideTip'
+            });
+
+            // 先显示加载动画
+            myChart.showLoading({
+                text: '正在加载 ' + cityName + ' 县级地图...',
+                color: '#22c55e',
+                textColor: '#bbf7d0',
+                maskColor: 'rgba(10, 46, 29, 0.8)'
+            });
+
+            const countyOption = {
+                tooltip: {
+                    trigger: 'item',
+                    formatter: '{b}<br/>生态安全指数：{c}'
+                },
+                visualMap: {
+                    left: 'left',
+                    bottom: '5%',
+                    min: Math.min(...countyDataList.map(d => d.value)),
+                    max: Math.max(...countyDataList.map(d => d.value)),
+                    text: ['高', '低'],
+                    calculable: true,
+                    inRange: {
+                        color: [
+                            '#d1fae5', '#a7f3d0', '#6ee7b7', '#34d399',
+                            '#10b981', '#059669', '#047857', '#065f46',
+                            '#064e3b', '#022c22'
+                        ]
+                    }
+                },
+                series: [
+                    {
+                        id: 'demo',  // 保持相同的id以实现平滑过渡
+                        name: cityName + '县级生态安全指数',
+                        type: 'map',
+                        map: config.mapName,  // 动态使用对应的地图名称
+                        roam: false,
+                        label: {
+                            show: true,
+                            color: '#022c22',
+                            fontSize: 8
+                        },
+                        emphasis: {
+                            label: {
+                                show: true,
+                                color: '#022c22'
+                            }
+                        },
+                        itemStyle: {
+                            areaColor: '#d1fae5',
+                            borderColor: '#60a5fa'
+                        },
+                        data: countyDataList,
+                        animationDurationUpdate: 1000,
+                        universalTransition: true
+                    }
+                ]
+            };
+
+            // 动态加载县级地图数据（使用阿里云DataV数据源）
+            fetch(config.dataUrl)
+                .then(response => response.json())
+                .then(geoJSON => {
+                    // 注册对应城市的地图
+                    echarts.registerMap(config.mapName, geoJSON);
+
+                    // 隐藏加载动画
+                    setTimeout(() => {
+                        myChart.hideLoading();
+
+                        // 使用平滑过渡效果
+                        myChart.setOption(countyOption, {
+                            notMerge: false,
+                            lazyUpdate: false,
+                            silent: false
+                        });
+
+                        currentProvince = cityName;
+                        updateButtonState('county');
+                        chartOverlay.textContent = cityName + '县级地图';
+                        backBtn.style.display = 'block';
+                    }, 500);
+                })
+                .catch(error => {
+                    myChart.hideLoading();
+                    console.error('县级地图数据加载失败:', cityName, 'Error:', error);
+                    alert('抱歉，' + cityName + '的县级地图数据暂时无法加载\n\n可能的原因：\n1. 网络连接问题\n2. 数据源暂时不可用\n\n建议稍后重试或使用其他数据源。');
+
+                    // 自动返回全国地图
+                    setTimeout(() => {
+                        backToChinaMap();
+                    }, 1000);
+                });
+        }
+
+        // 返回全国地图
+        function backToChinaMap() {
+            // 添加过渡动画效果
+            myChart.dispatchAction({
+                type: 'hideTip'
+            });
+
+            // 显示加载动画
+            myChart.showLoading({
+                text: '正在返回全国地图...',
+                color: '#22c55e',
+                textColor: '#bbf7d0',
+                maskColor: 'rgba(10, 46, 29, 0.8)'
+            });
+
+            setTimeout(() => {
+                myChart.hideLoading();
+
+                myChart.setOption(mapOption, {
+                    notMerge: false,
+                    lazyUpdate: false,
+                    silent: false
+                });
+                currentProvince = null;
+                updateButtonState('map');
+                chartOverlay.textContent = '全国地图';
+                backBtn.style.display = 'none';
+            }, 300);
+        }
+
+        // 获取省份拼音（用于地图数据加载）
+        function getProvincePinyin(name) {
+            const pinyinMap = {
+                '北京': 'beijing',
+                '天津': 'tianjin',
+                '上海': 'shanghai',
+                '重庆': 'chongqing',
+                '河北': 'hebei',
+                '山西': 'shanxi',
+                '内蒙古': 'neimenggu',
+                '辽宁': 'liaoning',
+                '吉林': 'jilin',
+                '黑龙江': 'heilongjiang',
+                '江苏': 'jiangsu',
+                '浙江': 'zhejiang',
+                '安徽': 'anhui',
+                '福建': 'fujian',
+                '江西': 'jiangxi',
+                '山东': 'shandong',
+                '河南': 'henan',
+                '湖北': 'hubei',
+                '湖南': 'hunan',
+                '广东': 'guangdong',
+                '广西': 'guangxi',
+                '海南': 'hainan',
+                '四川': 'sichuan',
+                '贵州': 'guizhou',
+                '云南': 'yunnan',
+                '西藏': 'xizang',
+                '陕西': 'shaanxi',  // 修正：陕西的正确拼音是 shaanxi
+                '甘肃': 'gansu',
+                '青海': 'qinghai',
+                '宁夏': 'ningxia',
+                '新疆': 'xinjiang'
+            };
+
+            const pinyin = pinyinMap[name];
+            if (!pinyin) {
+                console.warn('未找到省份拼音映射:', name);
+                return name.toLowerCase();
+            }
+
+            return pinyin;
+        }
+
+        // 按钮点击事件
+        mapBtn.addEventListener('click', function () {
+            if (currentProvince) {
+                backToChinaMap();
+            } else if (currentOption !== mapOption) {
+                // 添加过渡动画效果
+                myChart.dispatchAction({
+                    type: 'hideTip'
+                });
+
+                myChart.showLoading({
+                    text: '正在切换到地图视图...',
+                    color: '#22c55e',
+                    textColor: '#bbf7d0',
+                    maskColor: 'rgba(10, 46, 29, 0.8)'
+                });
+
+                setTimeout(() => {
+                    myChart.hideLoading();
+
+                    currentOption = mapOption;
+                    myChart.setOption(mapOption, {
+                        notMerge: false,
+                        lazyUpdate: false,
+                        silent: false
+                    });
+                    updateButtonState('map');
+                    chartOverlay.textContent = '全国地图';
+                }, 300);
+            }
+        });
+
+        barBtn.addEventListener('click', function () {
+            if (currentOption !== barOption) {
+                // 添加过渡动画效果
+                myChart.dispatchAction({
+                    type: 'hideTip'
+                });
+
+                myChart.showLoading({
+                    text: '正在切换到柱状图...',
+                    color: '#22c55e',
+                    textColor: '#bbf7d0',
+                    maskColor: 'rgba(10, 46, 29, 0.8)'
+                });
+
+                setTimeout(() => {
+                    myChart.hideLoading();
+
+                    currentOption = barOption;
+                    myChart.setOption(barOption, {
+                        notMerge: false,
+                        lazyUpdate: false,
+                        silent: false
+                    });
+                    updateButtonState('bar');
+                    chartOverlay.textContent = '柱状图视图';
+                    if (currentProvince) {
+                        backBtn.style.display = 'none';
+                        currentProvince = null;
+                    }
+                }, 300);
+            }
+        });
+
+        backBtn.addEventListener('click', function () {
+            backToChinaMap();
+        });
+
+        function updateButtonState(activeType) {
+            if (activeType === 'map' || activeType === 'province' || activeType === 'county') {
+                mapBtn.classList.add('active');
+                barBtn.classList.remove('active');
+            } else {
+                barBtn.classList.add('active');
+                mapBtn.classList.remove('active');
+            }
+        }
+
+        // 自适应窗口大小
+        window.addEventListener('resize', function () {
+            myChart.resize();
+        });
+    </script>
+</body>
+
+</html>
