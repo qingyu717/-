@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>智慧生态安全检测 - 中国地图</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #0a2e1d 0%, #1a5c3a 100%);
+            color: #f0f9f4;
+            min-height: 100vh;
+            display: flex;
+            align-items: stretch;
+            justify-content: center;
+        }
+
+        .page {
+            width: 100%;
+            max-width: 1200px;
+            margin: 16px;
+            padding: 16px 20px 20px;
+            background: rgba(18, 42, 28, 0.96);
+            border-radius: 18px;
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            border: 1px solid rgba(74, 222, 128, 0.3);
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid rgba(74, 222, 128, 0.4);
+        }
+
+        .title {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .title h1 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #bbf7d0;
+        }
+
+        .title h1::before {
+            content: "";
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 999px;
+            background: #22c55e;
+            box-shadow: 0 0 16px rgba(34, 197, 94, 0.7);
+        }
+
+        .title span {
+            font-size: 0.8rem;
+            color: #86efac;
+        }
+
+        .hint {
+            font-size: 0.78rem;
+            color: #86efac;
+            text-align: right;
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin: 12px 0;
+        }
+
+        .control-btn {
+            padding: 8px 20px;
+            border: 1px solid rgba(74, 222, 128, 0.5);
+            background: rgba(22, 101, 52, 0.3);
+            color: #bbf7d0;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(8px);
+        }
+
+        .control-btn:hover {
+            background: rgba(34, 197, 94, 0.4);
+            border-color: rgba(74, 222, 128, 0.8);
+            transform: translateY(-1px);
+        }
+
+        .control-btn.active {
+            background: rgba(34, 197, 94, 0.6);
+            border-color: #22c55e;
+            box-shadow: 0 0 12px rgba(34, 197, 94, 0.4);
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            margin-top: 6px;
+        }
+
+        .chart-wrapper {
+            flex: 1;
+            min-height: 360px;
+            height: 70vh;
+            border-radius: 16px;
+            overflow: hidden;
+            background: radial-gradient(circle at top left, #1a5c3a, #0a2e1d);
+            border: 1px solid rgba(74, 222, 128, 0.4);
+            position: relative;
+        }
+
+        #chart {
+            width: 100%;
+            height: 100%;
+        }
+
+        .chart-overlay {
+            position: absolute;
+            right: 14px;
+            top: 12px;
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            border-radius: 999px;
+            background: rgba(18, 42, 28, 0.85);
+            border: 1px solid rgba(74, 222, 128, 0.4);
+            color: #bbf7d0;
+            backdrop-filter: blur(8px);
+        }
+
+        @media (max-width: 768px) {
+            .page {
+                margin: 8px;
+                padding: 12px;
+            }
+
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 6px;
+            }
+
+            .hint {
+                text-align: left;
+            }
+
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .control-btn {
+                width: 100%;
+                max-width: 200px;
+            }
+
+            .chart-wrapper {
+                height: 60vh;
+                min-height: 320px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page">
+        <header>
+            <div class="title">
+                <h1>中国地图 ↔ 柱状图（假数据示例）</h1>
+                <span>使用 ECharts + universalTransition 实现地图与柱状图动态切换</span>
+            </div>
+            <div class="hint">
+                • 每 2 秒自动在「地图」和「柱状图」之间切换<br />
+                • 数据为演示用假数据
+            </div>
+        </header>
+
+        <main>
+            <div class="chart-wrapper">
+                <div id="chart"></div>
+                <div class="chart-overlay">地图 / 柱状图动画切换中…</div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ECharts 主库 -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+    <!-- 中国地图数据（直接通过这个脚本注册好 'china' 地图，无需自己加载 JSON） -->
+    <script src="https://fastly.jsdelivr.net/npm/echarts/map/js/china.js"></script>
+
+    <script>
+        const chartDom = document.getElementById('chart');
+        const myChart = echarts.init(chartDom);
+
+        // 假数据：随便编的“值”，只为了有个效果
+        // name 要和中国地图中的省份名称对应（简体中文）
+        var data = [
+            { name: '北京', value: 120 },
+            { name: '天津', value: 80 },
+            { name: '上海', value: 150 },
+            { name: '重庆', value: 90 },
+            { name: '广东', value: 200 },
+            { name: '福建', value: 110 },
+            { name: '浙江', value: 170 },
+            { name: '江苏', value: 160 },
+            { name: '山东', value: 140 },
+            { name: '河南', value: 130 },
+            { name: '湖北', value: 125 },
+            { name: '湖南', value: 115 },
+            { name: '四川', value: 155 },
+            { name: '陕西', value: 95 },
+            { name: '辽宁', value: 100 },
+            { name: '吉林', value: 70 },
+            { name: '黑龙江', value: 85 },
+            { name: '云南', value: 105 },
+            { name: '贵州', value: 65 },
+            { name: '广西', value: 90 },
+            { name: '安徽', value: 98 },
+            { name: '江西', value: 88 },
+            { name: '河北', value: 102 },
+            { name: '山西', value: 76 },
+            { name: '内蒙古', value: 60 },
+            { name: '甘肃', value: 55 },
+            { name: '青海', value: 40 },
+            { name: '宁夏', value: 38 },
+            { name: '新疆', value: 72 },
+            { name: '西藏', value: 30 },
+            { name: '海南', value: 50 }
+        ];
+
+        // 按 value 排序，方便柱状图从小到大展示
+        data.sort(function (a, b) {
+            return a.value - b.value;
+        });
+
+        const mapOption = {
+            tooltip: {
+                trigger: 'item',
+                formatter: '{b}<br/>值：{c}'
+            },
+            visualMap: {
+                left: 'left',
+                bottom: '5%',
+                min: 30,
+                max: 200,
+                text: ['高', '低'],
+                calculable: true,
+                inRange: {
+                    color: [
+                        '#313695',
+                        '#4575b4',
+                        '#74add1',
+                        '#abd9e9',
+                        '#e0f3f8',
+                        '#ffffbf',
+                        '#fee090',
+                        '#fdae61',
+                        '#f46d43',
+                        '#d73027',
+                        '#a50026'
+                    ]
+                }
+            },
+            series: [
+                {
+                    id: 'demo',
+                    name: '示例值',
+                    type: 'map',
+                    map: 'china',     // 这个名字由 china.js 注册好
+                    roam: true,       // 可以拖拽缩放
+                    label: {
+                        show: false
+                    },
+                    emphasis: {
+                        label: {
+                            show: true
+                        }
+                    },
+                    animationDurationUpdate: 1000,
+                    universalTransition: true,
+                    data: data
+                }
+            ]
+        };
+
+        const barOption = {
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'shadow'
+                },
+                formatter: function (params) {
+                    const p = params[0];
+                    return p.name + '<br/>值：' + p.value;
+                }
+            },
+            grid: {
+                left: 100,
+                right: 40,
+                top: 40,
+                bottom: 40
+            },
+            xAxis: {
+                type: 'value'
+            },
+            yAxis: {
+                type: 'category',
+                axisLabel: {
+                    rotate: 30
+                },
+                data: data.map(function (item) {
+                    return item.name;
+                })
+            },
+            animationDurationUpdate: 1000,
+            series: {
+                type: 'bar',
+                id: 'demo',   // 和 mapOption 里的 series.id 一致，才能做 universalTransition
+                data: data.map(function (item) {
+                    return item.value;
+                }),
+                universalTransition: true
+            }
+        };
+
+        let currentOption = mapOption;
+        myChart.setOption(mapOption);
+
+        // 每 2 秒在地图和柱状图之间切换
+        setInterval(function () {
+            currentOption = currentOption === mapOption ? barOption : mapOption;
+            myChart.setOption(currentOption, true);
+        }, 2000);
+
+        // 自适应窗口大小
+        window.addEventListener('resize', function () {
+            myChart.resize();
+        });
+    </script>
+</body>
+
+</html>
